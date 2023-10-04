@@ -138,16 +138,18 @@ def mannwhitneyu(df, vars, group_col='condition_key'):
 # Downstream analysis
 # -------------------
 
-p = '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/tracking_accuracy/230911_in-vivo_ex-vivo_vel_yvel-elong_box.csv_data.csv'
+p = '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/tracking_accuracy/230922_in-vivo_ex-vivo_vel_yvel-elong_box.csv_data.csv'
 df = pd.read_csv(p)
 
 df_min1 = df[df['minute'] == 1]
-df_min1_iv = df_min1[df_min1['type'] == 'in_vivo']
-df_min1_ev = df_min1[df_min1['type'] == 'ex_vivo']
+df_min1_iv = df_min1[df_min1['type'] == 'in vivo']
+df_min1_ev = df_min1[df_min1['type'] == '600 s-1']
 
 df_min3 = df[df['minute'] == 3]
-df_min3_iv = df_min3[df_min3['type'] == 'in_vivo']
-df_min3_ev = df_min3[df_min3['type'] == 'ex_vivo']
+df_min3_iv = df_min3[df_min3['type'] == 'in vivo']
+df_min3_ev = df_min3[df_min3['type'] == '600 s-1']
+print('n in vivo = ', len(df_min3_iv))
+print('n ex vivo = ', len(df_min3_ev))
 
 r0 = stats.mannwhitneyu(df_min1_iv['dv'].values, df_min1_ev['dv'].values)
 print('Min 1: dv: ', r0)
@@ -158,6 +160,15 @@ print('Min 1: dvy: ', r1)
 r2 = stats.mannwhitneyu(df_min3_iv['elong'].values, df_min3_ev['elong'].values)
 print('Min 3: elong: ', r2)
 
+r3 = stats.mannwhitneyu(df_min1_iv['elong'].values, df_min1_ev['elong'].values)
+print('Min 1: elong: ', r3)
+
 #Min 1: dv:  MannwhitneyuResult(statistic=48.0, pvalue=0.001098901098901099)
 #Min 1: dvy:  MannwhitneyuResult(statistic=45.0, pvalue=0.007692307692307693)
 #Min 3: elong:  MannwhitneyuResult(statistic=48.0, pvalue=0.001098901098901099)
+
+# 600 is
+# Min 1: dv:  MannwhitneyuResult(statistic=48.0, pvalue=0.001098901098901099)
+# Min 1: dvy:  MannwhitneyuResult(statistic=41.0, pvalue=0.04175824175824176)
+# Min 3: elong:  MannwhitneyuResult(statistic=36.0, pvalue=0.17032967032967034)
+# Min 1: elong:  MannwhitneyuResult(statistic=0.0, pvalue=0.001098901098901099)

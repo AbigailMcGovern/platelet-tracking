@@ -182,7 +182,8 @@ def add_flatness(df):
 def track(platelets, search_range):
     linked_pc = tp.link_df(platelets, search_range, 
                            pos_columns=['xs', 'ys', 'zs'], 
-                           t_column='frame', memory=1)
+                           t_column='frame', memory=1, 
+                           adaptive_stop=0.5, adaptive_step=0.5)
     return linked_pc
 
 def add_track_len(df):

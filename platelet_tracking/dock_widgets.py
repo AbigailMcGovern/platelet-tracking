@@ -60,7 +60,7 @@ def _track_platelets(
                        rotation, add_local_density)
     
     track_df = df[['particle', 'frame', 'z_pixels', 'y_pixels', 'x_pixels']].values
-    napari_viewer.add_tracks(track_df, properties=df, color_by='frame', scale=(z_microns, y_microns, x_microns))
+    napari_viewer.add_tracks(track_df, properties=df, color_by='frame', scale=(1, z_microns, y_microns, x_microns))
 
 
 

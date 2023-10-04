@@ -22,7 +22,7 @@ def plot_count_density_yvel_over_time(ivdf, evdf, save_data_dir, save_name):
     new_data = smooth_vars(new_data, vars)
     plt.rcParams['svg.fonttype'] = 'none' # so the text will be saved with the svg - not curves
     fig, axs = plt.subplots(1, 3, sharex=True)
-    axs[0].set_xlim(0, 200)
+    #axs[0].set_xlim(0, 200)
     sns.lineplot(data=new_data, x='time (s)', y='platelet count', ax=axs[0], hue='type')
     sns.lineplot(data=new_data, x='time (s)', y='density (/um3)', ax=axs[1], hue='type')
     sns.lineplot(data=new_data, x='time (s)', y='velocity (um/s)', ax=axs[2], hue='type')
@@ -77,7 +77,7 @@ def smooth_vars(df, vars):
     df = df.sort_values('time (s)')
     for v in vars:
         for k, grp in df.groupby('sample'):
-            rolled = grp[v].rolling(window=6, center=False).mean()
+            rolled = grp[v].rolling(window=20, center=False).mean()
             idxs = grp.index.values
             df.loc[idxs, v] = rolled
     return df
@@ -152,16 +152,19 @@ def add_bplot_data(df, new_data, vars, sample_col, sample_type):
 # Box plots
 # ---------
 
-def box_plots_vars(ivdf, evdf, ivars, evars, save_data_dir, save_name):
+def box_plots_vars(ivdf, evdf1, evdf2, ivars, evars, save_data_dir, save_name):
     ivdf = bin_into_min(ivdf)
-    evdf = bin_into_min(evdf)
+    evdf1 = bin_into_min(evdf1)
+    evdf2 = bin_into_min(evdf2)
     plt.rcParams['svg.fonttype'] = 'none'
     renameing = {ev : iv for iv, ev in zip(ivars, evars)}
-    evdf = evdf.rename(columns=renameing)
+    evdf1 = evdf1.rename(columns=renameing)
+    evdf2 = evdf2.rename(columns=renameing)
     fig, axs = plt.subplots(1, len(ivars))
     new_data = defaultdict(list)
-    new_data = add_bplot_data(ivdf, new_data, ivars, 'path', 'in_vivo')
-    new_data = add_bplot_data(evdf, new_data, ivars, 'sample_name', 'ex_vivo')
+    new_data = add_bplot_data(ivdf, new_data, ivars, 'path', 'in vivo')
+    new_data = add_bplot_data(evdf1, new_data, ivars, 'sample_name', '600 s-1')
+    new_data = add_bplot_data(evdf2, new_data, ivars, 'sample_name', '1800 s-1')
     new_data = pd.DataFrame(new_data)
     new_data = new_data[new_data['minute'] <= 3]
     new_data = new_data[new_data['minute'] > 0]
@@ -169,7 +172,7 @@ def box_plots_vars(ivdf, evdf, ivars, evars, save_data_dir, save_name):
         sns.boxplot(data=new_data, x='minute', y=v, hue='type', ax=ax)
         sns.stripplot(data=new_data, x='minute', y=v, hue='type',  ax=ax, dodge=True, edgecolor = 'white', linewidth=0.3)
         sns.despine(ax=ax)
-    fig.set_size_inches(10, 3)
+    fig.set_size_inches(12, 3)
     sp_data = os.path.join(save_data_dir, save_name + '_data.csv')
     new_data.to_csv(sp_data)
     fig.subplots_adjust(right=0.97, left=0.068, bottom=0.17, top=0.97, wspace=0.357, hspace=0.3)
@@ -184,14 +187,22 @@ def box_plots_vars(ivdf, evdf, ivars, evars, save_data_dir, save_name):
 # Paths & config
 # --------------
 iv_tp = '/Users/abigailmcgovern/Data/platelet-analysis/dataframes/211206_veh-sq_df.parquet'
-ex_tp = ['/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/20201015_MxV_1800is.parquet', 
+ex_tp2 = ['/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/20201015_MxV_1800is.parquet', 
          '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/201007_MxV_1800is.parquet', 
          '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/20201015_MxV_1800is_Fas100.parquet', 
          '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/200910_MxV_1800is_hir.parquet']
+ex_tp1 = [
+    '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/200917_MxV_600is.parquet', 
+    '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/201104_CMFDA_MxV_600is.parquet', 
+    '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/200910_MxV_hir_600is.parquet', 
+    '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/200923_MxV_DMSO_600is.parquet', 
+   # '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/mouse/tracking/200923_MxV_Fas100_600is.parquet', 
+]
 save_dir = '/Users/abigailmcgovern/Data/iterseg/invitro_platelets/ACBD/tracking_accuracy'
-save_name = '230911_in-vivo_ex-vivo_count_dens_vel_TAdj.csv'
-save_name_bar = '230911_in-vivo_ex-vivo_yvel-elong_z-vel.csv'
-save_name_box = '230911_in-vivo_ex-vivo_vel_yvel-elong_box.csv'
+save_name = '230922_in-vivo_ex-vivo_count_dens_vel_TAdj'
+save_name_ind = '230922_in-vivo_ex-vivo_count_dens_vel_TAdj_ind'
+save_name_bar = '230922_in-vivo_ex-vivo_yvel-elong_z-vel.csv'
+save_name_box = '230922_in-vivo_ex-vivo_vel_yvel-elong_box.csv'
 ts_20201015 = 2.145
 ts_201007 = 4.3885
 
@@ -200,22 +211,30 @@ ts_201007 = 4.3885
 # -------
 ivdf = pd.read_parquet(iv_tp)
 #ivdf = ivdf[ivdf['nrtracks'] > 10]
-evdf = [pd.read_parquet(p) for p in ex_tp]
-evdf = pd.concat(evdf).reset_index(drop=True)
+evdf1 = [pd.read_parquet(p) for p in ex_tp1]
+evdf2 = [pd.read_parquet(p) for p in ex_tp2]
+evdf1 = pd.concat(evdf1).reset_index(drop=True)
+evdf2 = pd.concat(evdf2).reset_index(drop=True)
 #evdf = evdf[evdf['nrtracks'] > 10]
-evdf = add_time_sec_td(evdf, ts_20201015, '201007_MxV_1800is', 'sample_name', 'frame')
-#print(evdf.columns.values)
-evdf = add_time_sec_td(evdf, ts_20201015, '20201015_MxV_1800is', 'sample_name', 'frame')
-evdf = add_time_sec_td(evdf, ts_20201015, '20201015_MxV_1800is_Fas100', 'sample_name', 'frame')
-evdf =  add_time_sec_td(evdf, ts_20201015, '200910_MxV_1800is_hir', 'sample_name', 'frame')
-evdf['dvy'] = evdf['dvy'] / .32 * 0.5
-evdf['dvx'] = evdf['dvx'] / .32 * 0.5
-evdf['dv'] = (evdf['dvy'] ** 2 + evdf['dvx'] ** 2 + evdf['dvz'] ** 2) ** 0.5
+#evdf = add_time_sec_td(evdf, ts_20201015, '201007_MxV_1800is', 'sample_name', 'frame')
+##print(evdf.columns.values)
+#evdf = add_time_sec_td(evdf, ts_20201015, '20201015_MxV_1800is', 'sample_name', 'frame')
+#evdf = add_time_sec_td(evdf, ts_20201015, '20201015_MxV_1800is_Fas100', 'sample_name', 'frame')
+#evdf =  add_time_sec_td(evdf, ts_20201015, '200910_MxV_1800is_hir', 'sample_name', 'frame')
+evdf1 = time_seconds(evdf1)
+evdf2 = time_seconds(evdf2)
+evdf1['dvy'] = evdf1['dvy'] / .32 * 0.5
+evdf1['dvx'] = evdf1['dvx'] / .32 * 0.5
+evdf1['dv'] = (evdf1['dvy'] ** 2 + evdf1['dvx'] ** 2 + evdf1['dvz'] ** 2) ** 0.5
+evdf2['dvy'] = evdf2['dvy'] / .32 * 0.5
+evdf2['dvx'] = evdf2['dvx'] / .32 * 0.5
+evdf2['dv'] = (evdf2['dvy'] ** 2 + evdf2['dvx'] ** 2 + evdf2['dvz'] ** 2) ** 0.5
 ivdf = bin_time(ivdf)
-evdf = bin_time(evdf)
-#plot_count_density_yvel_over_time(ivdf, evdf, save_dir, save_name)
-#plot_count_density_yvel_over_time_ind(evdf, save_dir, save_name)
+evdf1 = bin_time(evdf1)
+evdf2 = bin_time(evdf2)
+#plot_count_density_yvel_over_time(ivdf, evdf1, save_dir, save_name)
+#plot_count_density_yvel_over_time_ind(evdf1, save_dir, save_name_ind)
 ivars = ['dv', 'dvy', 'elong']
 evars = ['dv', 'dvy', 'elongation']
 #bar_plots_vars(ivdf, evdf, ivars, evars, save_dir, save_name_bar)
-box_plots_vars(ivdf, evdf, ivars, evars, save_dir, save_name_box)
+box_plots_vars(ivdf, evdf1, evdf2, ivars, evars, save_dir, save_name_box)

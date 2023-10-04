@@ -15,12 +15,12 @@ v = napari.Viewer()
 
 _load_data(v, directory=ip, data_type='individual frames', 
            layer_name='images', layer_type='Image', 
-           scale=(2, 0.32, 0.32), translate=(0, 0, 0), split_channels=True)
+           scale=(2, 0.5, 0.5), translate=(0, 0, 0), split_channels=True)
 
 _load_data(v, directory=sp, data_type='individual frames', 
            layer_name='labels', layer_type='Labels', 
-           scale=(2, 0.32, 0.32), translate=(0, 0, 0))
+           scale=(2, 0.5, 0.5), translate=(0, 0, 0))
 
-v.add_tracks(track_df, name='tracks', scale=(2, 0.32, 0.32), properties=df)
+v.add_tracks(track_df, name='tracks', scale=(2, 0.5, 0.5), properties=df)
 
 napari.run()
