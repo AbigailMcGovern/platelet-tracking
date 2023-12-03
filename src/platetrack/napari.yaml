@@ -1,0 +1,10 @@
+name: platetrack
+schema_version: 0.1.0
+contributions:
+  commands:
+    - id: platetrack.track_platelets
+      title: Create track_platelets
+      python_name: platetrack.dock_widgets:track_platelets
+  widgets:
+    - command: platetrack.track_platelets  # note, same as command.id above
+      display_name: track_platelets

@@ -21,12 +21,15 @@ def track_platelets(
         save_dir: Union[str, None]=None, 
         save_file: Union[str, None]=None, 
         save_format: str="parquet", 
+        search_range: float=2., 
+        xy_origin: Union[str, tuple]='centre', 
+        rotation: float=45, 
     ):
 
     _track_platelets(napari_viewer, labels_layer, image_layer, 
                      use_all_image_layers, sample_name, treatment_name, 
                      x_microns, y_microns, z_microns, save_dir, save_file, 
-                     save_format)
+                     save_format, search_range, xy_origin, rotation)
 
 
 def _track_platelets(
@@ -45,7 +48,7 @@ def _track_platelets(
         search_range: float=2., 
         xy_origin: Union[str, tuple]='centre', 
         rotation: float=45, 
-        add_local_density: bool=False, 
+        add_local_density: bool=True, 
     ):
 
     labels = labels_layer.data
