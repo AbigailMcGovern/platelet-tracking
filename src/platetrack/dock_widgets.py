@@ -15,8 +15,8 @@ def track_platelets(
         use_all_image_layers: bool, 
         sample_name: str, 
         treatment_name: str,
-        x_microns: float=0.32, 
-        y_microns: float=0.32, 
+        x_microns: float=0.50, 
+        y_microns: float=0.50, 
         z_microns: float=2., 
         save_dir: Union[str, None]=None, 
         save_file: Union[str, None]=None, 
@@ -39,8 +39,8 @@ def _track_platelets(
         use_all_image_layers: bool, 
         sample_name: str, 
         treatment_name: str,
-        x_microns: float=0.32, 
-        y_microns: float=0.32, 
+        x_microns: float=0.50, 
+        y_microns: float=0.50, 
         z_microns: float=2., 
         save_dir: Union[str, None]=None, 
         save_file: Union[str, None]=None, 
@@ -62,8 +62,8 @@ def _track_platelets(
                        y_microns, z_microns, save_format, search_range, xy_origin, 
                        rotation, add_local_density)
     
-    track_df = df[['particle', 'frame', 'z_pixels', 'y_pixels', 'x_pixels']].values
-    napari_viewer.add_tracks(track_df, properties=df, color_by='frame', scale=(1, z_microns, y_microns, x_microns))
+    track_df = df[['particle', 'frame', 'z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']].values
+    napari_viewer.add_tracks(data=track_df, properties=df, color_by='frame')
 
 
 
