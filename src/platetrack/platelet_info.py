@@ -20,8 +20,8 @@ def track_my_platelets(
         save_file: str, 
         sample_name: str, 
         treatment_name: str,
-        x_microns: float=0.32, 
-        y_microns: float=0.32, 
+        x_microns: float=0.5, 
+        y_microns: float=0.5, 
         z_microns: float=2., 
         save_format: str="parquet", 
         search_range: float=2., 
@@ -32,7 +32,13 @@ def track_my_platelets(
     df = platelet_info_from_segmentation(labels, image_channels_dict, 
                                          sample_name, treatment_name, 
                                          x_microns, y_microns, z_microns)
+    #print(df.columns.values)
     df = track(df, search_range)
+    scaled_pix = ['z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']
+    ax = ['z_pixels', 'y_pixels', 'x_pixels']
+    factors = [z_microns, y_microns, x_microns]
+    for a, f, s in zip(ax, factors, scaled_pix):
+        df[s] = df[a] * f
     df = add_track_len(df)
     if xy_origin == 'centre':
         xy_origin = np.array(labels.shape[-2:]) * np.array([y_microns, x_microns]) / 2
@@ -53,9 +59,9 @@ def track_my_platelets(
     if add_local_density:
         df = add_neighbour_lists(df, sample_col='sample_name', coords=('xs', 'ys', 'zs'))
         df = local_density(df, z_max=labels.shape[-3] * z_microns, sample_col='sample_name')
-    save_platelet_tracks(df, save_dir, save_file, sample_name, save_format)
-    print(df.head)
-    return df
+    p = save_platelet_tracks(df, save_dir, save_file, sample_name, save_format)
+    #print(df.columns.values)
+    return df, p
 
 
 
@@ -64,8 +70,8 @@ def platelet_info_from_segmentation(
         image_channels_dict: dict,
         sample_name: str, 
         treatment_name: str,
-        x_microns: float=0.32, 
-        y_microns: float=0.32, 
+        x_microns: float=0.5, 
+        y_microns: float=0.5, 
         z_microns: float=2., 
     ):
     '''
@@ -127,13 +133,11 @@ def platelet_info_from_segmentation(
     labs_df = labs_df.rename(columns=rename)
     # add coloumn with coordinates in microns
     microns = ['zs', 'ys', 'xs']
-    scaled_pix = ['z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']
     factors = [z_microns, y_microns, x_microns]
-    for m, a, f, s in zip(microns, ax, factors, scaled_pix):
+    for m, a, f in zip(microns, ax, factors):
         labs_df[m] = labs_df[a] * f
-        labs_df[s] = labs_df[a] * f
     # add volume column (in microns)
-    one_voxel = x_microns *y_microns * z_microns
+    one_voxel = x_microns * y_microns * z_microns
     labs_df['volume'] = labs_df['area'] * one_voxel
     # get flatness (or lineness) scores
     labs_df = add_elongation(labs_df)
@@ -172,6 +176,7 @@ def save_platelet_tracks(
         labs_df.to_csv(path)
     elif save_format == 'parquet':
         labs_df.to_parquet(path)
+    return path
 
 
 def add_elongation(df):

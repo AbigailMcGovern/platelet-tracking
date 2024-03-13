@@ -1,5 +1,5 @@
 from iterseg._dock_widgets import _load_data
-from platelet_tracking.dock_widgets import _track_platelets
+from platetrack.dock_widgets import _track_platelets
 import napari
 
 

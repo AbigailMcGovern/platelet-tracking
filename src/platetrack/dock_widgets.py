@@ -2,6 +2,7 @@ from magicgui import magic_factory
 import napari
 from .platelet_info import track_my_platelets
 from typing import Union
+import pandas as pd
 
 
 @magic_factory(
@@ -57,17 +58,14 @@ def _track_platelets(
                                if isinstance(l, napari.layers.Image)}
     else:
         image_channels_dict = {image_layer.name : image_layer.data}
-    df = track_my_platelets(labels, image_channels_dict, save_dir, 
+    df, p = track_my_platelets(labels, image_channels_dict, save_dir, 
                        save_file, sample_name, treatment_name, x_microns, 
                        y_microns, z_microns, save_format, search_range, xy_origin, 
                        rotation, add_local_density)
-    
+    if save_format == 'parquet':
+        df = pd.read_parquet(p)
+    elif save_format == 'csv':
+        df = pd.read_csv(p)
     track_df = df[['particle', 'frame', 'z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']].values
-    napari_viewer.add_tracks(data=track_df, properties=df, color_by='frame')
-
-
-
-@magic_factory()
-def load_platelet_tracks():
-    pass
+    napari_viewer.add_tracks(data=track_df, properties=df, name=sample_name)
 
