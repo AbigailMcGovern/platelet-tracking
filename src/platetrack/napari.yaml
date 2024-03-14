@@ -5,6 +5,14 @@ contributions:
     - id: platetrack.track_platelets
       title: Create track_platelets
       python_name: platetrack.dock_widgets:track_platelets
+    - id: platetrack.load_tracks
+      title: Load a tracks csv into a tracks layer
+      python_name: platetrack._io:get_napari_reader
+  readers:
+    - command: platetrack.load_tracks
+      filename_patterns:
+        ['*.csv', '*.parquet']
+      accepts_directories: false
   widgets:
-    - command: platetrack.track_platelets  # note, same as command.id above
+    - command: platetrack.track_platelets  
       display_name: track_platelets
