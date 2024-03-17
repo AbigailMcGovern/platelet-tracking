@@ -14,11 +14,11 @@ from typing import Union
 
 
 def track_my_platelets( 
-        labels: np.ndarray, 
+        labels: np.ndarray,
         image_channels_dict: dict,
         save_file: str,
         save_mode: str,
-        sample_name: str, 
+        sample_name: str,
         treatment_name: str,
         x_microns: float = 0.5,
         y_microns: float = 0.5,
