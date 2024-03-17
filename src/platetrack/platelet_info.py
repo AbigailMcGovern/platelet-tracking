@@ -93,9 +93,8 @@ def platelet_info_from_segmentation(
         l_max = np.max(labels[t])
         chans_dfs = []
         chans_started = False
-        for key in image_channels_dict.keys():
-            im = image_channels_dict[key][t, ...]
-            im = np.array(im)
+        for key in image_channels_dict:
+            im = np.asarray(image_channels_dict[key][t, ...])
             if not chans_started:
                 props = ('label', 'centroid', 'inertia_tensor_eigvals',
                                'area', 'mean_intensity', 'max_intensity')
