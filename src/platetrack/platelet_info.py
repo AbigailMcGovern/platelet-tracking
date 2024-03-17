@@ -110,9 +110,9 @@ def platelet_info_from_segmentation(
             df_labs = df['label'].values
             df = df.set_index('label')
             df = df.rename(columns={
-            'mean_intensity' : f'{key}: mean_intensity',
-            'max_intensity' : f'{key}: max_intensity',
-            })
+                    'mean_intensity' : f'{key}: mean_intensity',
+                    'max_intensity' : f'{key}: max_intensity',
+                    })
             chans_dfs.append(df)
         df = pd.concat(chans_dfs, axis=1)
         df['label'] = df_labs
