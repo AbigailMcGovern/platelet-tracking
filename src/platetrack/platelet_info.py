@@ -102,7 +102,7 @@ def platelet_info_from_segmentation(
                 chans_started = True
             else:
                 props = ('label', 'mean_intensity', 'max_intensity')
-            df = regionprops_table(labels[t], 
+            df = regionprops_table(np.asarray(labels[t]),
                                intensity_image=im, 
                                properties=props)
             df['frame'] = [t,] * len(df['label']) 
