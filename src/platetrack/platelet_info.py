@@ -16,23 +16,23 @@ from typing import Union
 def track_my_platelets( 
         labels: np.ndarray, 
         image_channels_dict: dict,
-        save_dir: str, 
-        save_file: str, 
+        save_file: str,
+        save_mode: str,
         sample_name: str, 
         treatment_name: str,
-        x_microns: float=0.5, 
-        y_microns: float=0.5, 
-        z_microns: float=2., 
-        save_format: str="parquet", 
-        search_range: float=2., 
-        xy_origin: Union[str, tuple]='centre', 
-        rotation: float=45, 
-        add_local_density: bool=False, 
+        x_microns: float = 0.5,
+        y_microns: float = 0.5,
+        z_microns: float = 2.,
+        save_format: str = "parquet",
+        search_range: float = 2.,
+        xy_origin: Union[str, tuple] = 'centre',
+        rotation: float = 45.,
+        add_local_density: bool = False,
+        units: str = 'um',
         ):
     df = platelet_info_from_segmentation(labels, image_channels_dict, 
                                          sample_name, treatment_name, 
                                          x_microns, y_microns, z_microns)
-    #print(df.columns.values)
     df = track(df, search_range)
     scaled_pix = ['z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']
     ax = ['z_pixels', 'y_pixels', 'x_pixels']
@@ -59,7 +59,7 @@ def track_my_platelets(
     if add_local_density:
         df = add_neighbour_lists(df, sample_col='sample_name', coords=('xs', 'ys', 'zs'))
         df = local_density(df, z_max=labels.shape[-3] * z_microns, sample_col='sample_name')
-    p = save_platelet_tracks(df, save_dir, save_file, sample_name, save_format)
+    p = save_platelet_tracks(df, save_file, save_mode, save_format)
     #print(df.columns.values)
     return df, p
 
@@ -154,29 +154,22 @@ def platelet_info_from_segmentation(
 
 def save_platelet_tracks(
         labs_df, 
-        save_dir, 
-        save_file, 
-        sample_name, 
-        save_format
+        save_file,
+        save_mode,
+        save_format,
         ):
-    if save_dir is not None:
-        path = os.path.join(save_dir, sample_name + f'.{save_format}')
-    
-    elif save_file is not None:
-        if os.path.exists(save_file):
-            if not save_file.endswith(save_format):
-                save_format == Path(save_file).suffix
-            if save_format == 'csv':
-                df = pd.read_csv(save_file)
-            elif save_format == 'parquet':
-                df = pd.read_parquet(save_file)
-            labs_df = pd.concat([df, labs_df]).reset_index(drop=True)
-            path = save_file
     if save_format == 'csv':
-        labs_df.to_csv(path)
-    elif save_format == 'parquet':
-        labs_df.to_parquet(path)
-    return path
+        # For csv, we can append directly to the csv file
+        labs_df.to_csv(
+                save_file, mode='a', header=not os.path.exists(save_file)
+                )
+    else:  # save_format == 'parquet':
+        # For parquet, it's more complicated, so we read in, append, and write
+        # out
+        if os.path.exists(save_file) and save_mode == 'append':
+            df = pd.read_parquet(save_file)
+            labs_df = pd.concat([df, labs_df]).reset_index(drop=True)
+        labs_df.to_parquet(save_file)
 
 
 def add_elongation(df):
