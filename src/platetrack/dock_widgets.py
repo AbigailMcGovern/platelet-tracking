@@ -64,7 +64,7 @@ def _track_platelets(
         xy_origin: Union[str, tuple]='centre', 
         rotation: float=45, 
         add_local_density: bool=True, 
-        ):
+        ) -> LayerDataTuple:
 
     labels = labels_layer.data
     if use_all_image_layers:
