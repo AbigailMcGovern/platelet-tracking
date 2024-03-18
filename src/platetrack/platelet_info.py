@@ -90,7 +90,6 @@ def platelet_info_from_segmentation(
     labs_df = []
     counter = 0
     for t in tqdm(range(t_max), desc="Obtaining platelet info"):
-        l_max = np.max(labels[t])
         chans_dfs = []
         chans_started = False
         for key in image_channels_dict:
@@ -100,37 +99,29 @@ def platelet_info_from_segmentation(
                                'area', 'mean_intensity', 'max_intensity')
                 chans_started = True
             else:
-                props = ('label', 'mean_intensity', 'max_intensity')
-            df = regionprops_table(np.asarray(labels[t]),
+                props = ('mean_intensity', 'max_intensity')
+            df = pd.DataFrame(regionprops_table(np.asarray(labels[t]),
                                intensity_image=im, 
-                               properties=props)
-            df['frame'] = [t,] * len(df['label']) 
-            df = pd.DataFrame(df)
-            df_labs = df['label'].values
-            df = df.set_index('label')
+                               properties=props))
             df = df.rename(columns={
                     'mean_intensity' : f'{key}: mean_intensity',
                     'max_intensity' : f'{key}: max_intensity',
                     })
             chans_dfs.append(df)
         df = pd.concat(chans_dfs, axis=1)
-        df['label'] = df_labs
-        df_pids = [i for i in range(counter, len(df['label']) + counter)]
-        counter += len(df['label'])
-        df['pid'] = df_pids
+        df['frame'] = t
+        df['pid'] = np.arange(counter, counter + len(df))
+        counter += len(df)
         df = df.set_index('pid')
-        bbb = len(df)
-        df = df.loc[~df.index.duplicated(keep='first')]
-        aaa = len(df)
         labs_df.append(df)
     labs_df = pd.concat(labs_df)
     cols = df.columns.values
     # rename the voxel coordinate columns
-    cols = [c for c in cols if c.find('centroid') != -1]
-    ax = ['z_pixels', 'y_pixels', 'x_pixels'] # this should be true after np.transpose in read_image()
-    rename = {cols[i] : ax[i] for i in range(len(cols))}
+    # this should be correct if image is zyx
+    rename = {f'centroid-{i}': ax
+              for i, ax in enumerate(['z_pixels', 'y_pixels', 'x_pixels'])}
     labs_df = labs_df.rename(columns=rename)
-    # add coloumn with coordinates in microns
+    # add column with coordinates in microns
     microns = ['zs', 'ys', 'xs']
     factors = [z_microns, y_microns, x_microns]
     for m, a, f in zip(microns, ax, factors):
@@ -145,8 +136,6 @@ def platelet_info_from_segmentation(
     labs_df['sample_name'] = sample_name
     labs_df['treatment'] = treatment_name
     labs_df['time_processed'] = dt
-    #print(labs_df.columns.values)
-    labs_df = labs_df.T.drop_duplicates().T
     return labs_df
  
 
