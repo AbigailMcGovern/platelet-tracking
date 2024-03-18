@@ -23,15 +23,15 @@ image_layer = None
 use_all_image_layers = True
 sample_name = 'mishterman'
 treatment_name = 'nothingsir'
-x_microns, y_microns, z_microns = 0.5, 0.5, 2
-save_dir = '/Users/abigailmcgovern/Data/iterseg/sample_data/mics'
-save_file = None
+units = 'um'
+save_file = example_root / 'out-platetrack/debug.parquet'
+save_mode = 'append'
 save_format = 'parquet'
 search_range = 2
 xy_origin = 'centre'
 rotation = 45
 
 _track_platelets(napari_viewer, labels_layer, image_layer,
-                     use_all_image_layers, sample_name, treatment_name, 
-                     x_microns, y_microns, z_microns, save_dir, save_file, 
+                     use_all_image_layers, sample_name, treatment_name, units,
+                     save_file, save_mode,
                      save_format, search_range, xy_origin, rotation)
