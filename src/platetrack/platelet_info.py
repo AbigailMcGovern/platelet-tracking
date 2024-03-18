@@ -101,8 +101,8 @@ def platelet_info_from_segmentation(
             else:
                 props = ('mean_intensity', 'max_intensity')
             df = pd.DataFrame(regionprops_table(np.asarray(labels[t]),
-                               intensity_image=im, 
-                               properties=props))
+                              intensity_image=im,
+                              properties=props))
             df = df.rename(columns={
                     'mean_intensity' : f'{key}: mean_intensity',
                     'max_intensity' : f'{key}: max_intensity',
