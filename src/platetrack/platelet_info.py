@@ -118,13 +118,13 @@ def platelet_info_from_segmentation(
     cols = df.columns.values
     # rename the voxel coordinate columns
     # this should be correct if image is zyx
-    rename = {f'centroid-{i}': ax
-              for i, ax in enumerate(['z_pixels', 'y_pixels', 'x_pixels'])}
+    axes = ['z_pixels', 'y_pixels', 'x_pixels']
+    rename = {f'centroid-{i}': ax for i, ax in enumerate(axes)}
     labs_df = labs_df.rename(columns=rename)
     # add column with coordinates in microns
     microns = ['zs', 'ys', 'xs']
     factors = [z_microns, y_microns, x_microns]
-    for m, a, f in zip(microns, ax, factors):
+    for m, a, f in zip(microns, axes, factors):
         labs_df[m] = labs_df[a] * f
     # add volume column (in microns)
     one_voxel = x_microns * y_microns * z_microns
