@@ -34,7 +34,6 @@ def track_platelets(
         image_layers: list[napari.layers.Image],
         sample_name: str,
         treatment_name: str,
-        units: str,
         save_file: pathlib.Path,
         save_mode: Literal['overwrite', 'append'] = 'append',
         save_format: Literal['parquet', 'csv'] = 'parquet',
@@ -45,7 +44,7 @@ def track_platelets(
 
     return _track_platelets(viewer, labels_layer, image_layers,
                      use_all_image_layers, sample_name, treatment_name, 
-                     units, save_mode, save_file,
+                     save_mode, save_file,
                      save_format, search_range, xy_origin, rotation)
 
 
@@ -56,7 +55,6 @@ def _track_platelets(
         use_all_image_layers: bool, 
         sample_name: str, 
         treatment_name: str,
-        units: str,
         save_file: pathlib.Path,
         save_mode: Literal['overwrite', 'append'] = 'append',
         save_format: str="parquet",
@@ -77,7 +75,7 @@ def _track_platelets(
     df, p = track_my_platelets(labels, image_channels_dict,
                        save_file, save_mode, sample_name, treatment_name, x_microns,
                        y_microns, z_microns, save_format, search_range, xy_origin,
-                       rotation, add_local_density, units)
+                       rotation, add_local_density)
     track_df = df[
             ['particle', 'frame',
              'z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']
