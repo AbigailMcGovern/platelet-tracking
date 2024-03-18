@@ -81,6 +81,6 @@ def _track_platelets(
     track_df = df[
             ['particle', 'frame',
              'z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']
-            ].values
+            ].to_numpy(dtype=float)
     return track_df, {'features': df, 'name': sample_name}, 'tracks'
 
