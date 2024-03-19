@@ -1,3 +1,4 @@
+from __future__ import annotations  # needed for arg: Type1 | Type2
 import os
 import pathlib
 import string

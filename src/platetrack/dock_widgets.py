@@ -1,3 +1,5 @@
+from __future__ import annotations  # needed for arg: Type1 | Type2
+
 import pathlib
 
 from magicgui import magic_factory
