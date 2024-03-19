@@ -14,25 +14,25 @@ from typing import Union
 
 
 def track_my_platelets( 
-        labels: np.ndarray, 
+        labels: np.ndarray,
         image_channels_dict: dict,
-        save_dir: str, 
-        save_file: str, 
-        sample_name: str, 
+        save_file: str,
+        save_mode: str,
+        sample_name: str,
         treatment_name: str,
-        x_microns: float=0.5, 
-        y_microns: float=0.5, 
-        z_microns: float=2., 
-        save_format: str="parquet", 
-        search_range: float=2., 
-        xy_origin: Union[str, tuple]='centre', 
-        rotation: float=45, 
-        add_local_density: bool=False, 
+        x_microns: float = 0.5,
+        y_microns: float = 0.5,
+        z_microns: float = 2.,
+        save_format: str = "parquet",
+        search_range: float = 2.,
+        xy_origin: Union[str, tuple] = 'centre',
+        rotation: float = 45.,
+        add_local_density: bool = False,
+        units: str = 'um',
         ):
     df = platelet_info_from_segmentation(labels, image_channels_dict, 
                                          sample_name, treatment_name, 
                                          x_microns, y_microns, z_microns)
-    #print(df.columns.values)
     df = track(df, search_range)
     scaled_pix = ['z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']
     ax = ['z_pixels', 'y_pixels', 'x_pixels']
@@ -59,7 +59,7 @@ def track_my_platelets(
     if add_local_density:
         df = add_neighbour_lists(df, sample_col='sample_name', coords=('xs', 'ys', 'zs'))
         df = local_density(df, z_max=labels.shape[-3] * z_microns, sample_col='sample_name')
-    p = save_platelet_tracks(df, save_dir, save_file, sample_name, save_format)
+    p = save_platelet_tracks(df, save_file, save_mode, save_format)
     #print(df.columns.values)
     return df, p
 
@@ -90,51 +90,41 @@ def platelet_info_from_segmentation(
     labs_df = []
     counter = 0
     for t in tqdm(range(t_max), desc="Obtaining platelet info"):
-        l_max = np.max(labels[t])
         chans_dfs = []
         chans_started = False
-        for key in image_channels_dict.keys():
-            im = image_channels_dict[key][t, ...]
-            im = np.array(im)
+        for key in image_channels_dict:
+            im = np.asarray(image_channels_dict[key][t, ...])
             if not chans_started:
                 props = ('label', 'centroid', 'inertia_tensor_eigvals',
                                'area', 'mean_intensity', 'max_intensity')
                 chans_started = True
             else:
-                props = ('label', 'mean_intensity', 'max_intensity')
-            df = regionprops_table(labels[t], 
-                               intensity_image=im, 
-                               properties=props)
-            df['frame'] = [t,] * len(df['label']) 
-            df = pd.DataFrame(df)
-            df_labs = df['label'].values
-            df = df.set_index('label')
+                props = ('mean_intensity', 'max_intensity')
+            df = pd.DataFrame(regionprops_table(np.asarray(labels[t]),
+                              intensity_image=im,
+                              properties=props))
             df = df.rename(columns={
-            'mean_intensity' : f'{key}: mean_intensity',
-            'max_intensity' : f'{key}: max_intensity',
-            })
+                    'mean_intensity' : f'{key}: mean_intensity',
+                    'max_intensity' : f'{key}: max_intensity',
+                    })
             chans_dfs.append(df)
         df = pd.concat(chans_dfs, axis=1)
-        df['label'] = df_labs
-        df_pids = [i for i in range(counter, len(df['label']) + counter)]
-        counter += len(df['label'])
-        df['pid'] = df_pids
+        df['frame'] = t
+        df['pid'] = np.arange(counter, counter + len(df))
+        counter += len(df)
         df = df.set_index('pid')
-        bbb = len(df)
-        df = df.loc[~df.index.duplicated(keep='first')]
-        aaa = len(df)
         labs_df.append(df)
     labs_df = pd.concat(labs_df)
     cols = df.columns.values
     # rename the voxel coordinate columns
-    cols = [c for c in cols if c.find('centroid') != -1]
-    ax = ['z_pixels', 'y_pixels', 'x_pixels'] # this should be true after np.transpose in read_image()
-    rename = {cols[i] : ax[i] for i in range(len(cols))}
+    # this should be correct if image is zyx
+    axes = ['z_pixels', 'y_pixels', 'x_pixels']
+    rename = {f'centroid-{i}': ax for i, ax in enumerate(axes)}
     labs_df = labs_df.rename(columns=rename)
-    # add coloumn with coordinates in microns
+    # add column with coordinates in microns
     microns = ['zs', 'ys', 'xs']
     factors = [z_microns, y_microns, x_microns]
-    for m, a, f in zip(microns, ax, factors):
+    for m, a, f in zip(microns, axes, factors):
         labs_df[m] = labs_df[a] * f
     # add volume column (in microns)
     one_voxel = x_microns * y_microns * z_microns
@@ -146,37 +136,28 @@ def platelet_info_from_segmentation(
     labs_df['sample_name'] = sample_name
     labs_df['treatment'] = treatment_name
     labs_df['time_processed'] = dt
-    #print(labs_df.columns.values)
-    labs_df = labs_df.T.drop_duplicates().T
     return labs_df
  
 
 
 def save_platelet_tracks(
         labs_df, 
-        save_dir, 
-        save_file, 
-        sample_name, 
-        save_format
+        save_file,
+        save_mode,
+        save_format,
         ):
-    if save_dir is not None:
-        path = os.path.join(save_dir, sample_name + f'.{save_format}')
-    
-    elif save_file is not None:
-        if os.path.exists(save_file):
-            if not save_file.endswith(save_format):
-                save_format == Path(save_file).suffix
-            if save_format == 'csv':
-                df = pd.read_csv(save_file)
-            elif save_format == 'parquet':
-                df = pd.read_parquet(save_file)
-            labs_df = pd.concat([df, labs_df]).reset_index(drop=True)
-            path = save_file
     if save_format == 'csv':
-        labs_df.to_csv(path)
-    elif save_format == 'parquet':
-        labs_df.to_parquet(path)
-    return path
+        # For csv, we can append directly to the csv file
+        labs_df.to_csv(
+                save_file, mode='a', header=not os.path.exists(save_file)
+                )
+    else:  # save_format == 'parquet':
+        # For parquet, it's more complicated, so we read in, append, and write
+        # out
+        if os.path.exists(save_file) and save_mode == 'append':
+            df = pd.read_parquet(save_file)
+            labs_df = pd.concat([df, labs_df]).reset_index(drop=True)
+        labs_df.to_parquet(save_file)
 
 
 def add_elongation(df):
