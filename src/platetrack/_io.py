@@ -32,12 +32,18 @@ def get_napari_reader(path):
 
 
 def get_tracks_scale_and_cols(df):
-    if 'z_pixels_scaled' in df.columns.values:
-        cols = ['particle', 'frame', 'z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled']
-        scale = [1, 1, 1, 1]
-    if 'z_pixels_scaled' not in df.columns.values:
-        cols = ['particle', 'frame', 'z_pixels', 'y_pixels', 'x_pixels']
-        scale = [1, 2, 0.5, 0.5]
+    pixel_coords_cols = ['frame', 'z_pixels', 'y_pixels', 'x_pixels']
+    data_coords_cols = [
+            't', 'z_pixels_scaled', 'y_pixels_scaled', 'x_pixels_scaled'
+            ]
+    id_col = ['particle']
+    # this code assumes *no* translation
+    scale = [1,] * 4
+    for i, (px, dt) in enumerate(zip(pixel_coords_cols, data_coords_cols)):
+        if dt in df:
+            first_nonzero = np.flatnonzero(df[dt])[0]
+            scale[i] = df[dt][first_nonzero] / df[px][first_nonzero]
+    cols = id_col + pixel_coords_cols
     return scale, cols
 
 
